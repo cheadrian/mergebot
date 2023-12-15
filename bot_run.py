@@ -354,11 +354,11 @@ def farm_energy(img, device):
     height, width, _ = img.shape
     # Open tasks menu
     device.input_tap(width * c.ENG_LEFT, height * c.ENG_TOP)
-    time.sleep(2)
+    time.sleep(3)
     for i in range(c.MAX_FARM_SESSIONS):
         # Hit the "Go" button and wait for X seconds
         device.input_tap(width * c.GO_LEFT, height * c.GO_TOP)
-        time.sleep(16)
+        time.sleep(17)
         device.input_keyevent("BACK")
         time.sleep(2)
         # Hit the "Claim" button
