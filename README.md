@@ -52,8 +52,8 @@ To setup on Termux, copy and paste the code below:
 
 ```bash
 yes | pkg update -y
-pkg install -y git opencv-python tesseract python android-tools
-pip install numpy pytesseract pure-python-adb
+pkg install -y git opencv-python tesseract python android-tools termux-api
+pip install numpy pytesseract pure-python-adb termuxgui
 git clone https://github.com/cheadrian/mergebot
 cd ~/mergebot
 ```
