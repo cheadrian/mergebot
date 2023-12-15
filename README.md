@@ -53,8 +53,9 @@ To setup on Termux, copy and paste the code below:
 ```bash
 yes | pkg update -y
 pkg install -y git opencv-python tesseract python android-tools
-git clone https://github.com/cheadrian/mergebot .
 pip install numpy pytesseract pure-python-adb
+git clone https://github.com/cheadrian/mergebot
+cd ~/mergebot
 ```
 
 ### ADB pairing on Termux
@@ -95,6 +96,7 @@ On Termux you can run the configuration script.
 Take two screenshots in the game, one with the items to merge, and one on the energy task menu and run the configuration script:
 
 ```bash
+cd ~/mergebot
 python bot_gui.py
 ```
 
@@ -118,6 +120,12 @@ adb devices
 There should be one device with "online" status in the list.
 
 After you configured the bot parameters, you can simply:
+
+If you are on Termux, first:
+
+```bash
+cd ~/mergebot
+```
 
 ```bash
 python bot_run.py
