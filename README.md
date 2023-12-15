@@ -53,7 +53,7 @@ To setup on Termux, copy and paste the code below:
 ```bash
 yes | pkg update -y
 pkg install -y git opencv-python tesseract python android-tools
-git clone GITHUB .
+git clone https://github.com/cheadrian/mergebot .
 pip install numpy pytesseract pure-python-adb
 ```
 
