@@ -281,7 +281,7 @@ def try_to_delivery(device, img_shape):
 def generate_objects(device, contours, img):
     energy_left = get_energy_level(img)
     for pos in c.GENERATOR_POSITIONS:
-        x, y, _, _ = cv2.boundingRect(contours[pos])
+        x, y, _, _ = cv2.boundingRect(contours[pos - 1])
         if energy_left <= c.MIN_ENERGY_LEVEL:
             print("No energy left")
             return False
