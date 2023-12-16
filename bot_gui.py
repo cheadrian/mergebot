@@ -219,7 +219,7 @@ def main():
         image_viewer.setlinearlayoutparams(0)
         image_viewer.setheight(rootHeight - int(rootHeight / 7), True)
 
-        paramGridLayout = tg.GridLayout(activity, 4, 2, scrollLinear)
+        paramGridLayout = tg.GridLayout(activity, 6, 2, scrollLinear)
         min_eng_lvl_txt = tg.TextView(activity, "Minimum energy level", paramGridLayout)
         min_eng_lvl_txt.setgridlayoutparams(0, 0)
         min_eng_lvl_txt.setwidth(145)
@@ -275,6 +275,20 @@ def main():
         )
         gen_min_groups.setgridlayoutparams(3, 1)
         gen_min_groups.setwidth(145)
+        
+        min_blank_txt = tg.TextView(activity, "Minimum blank spaces", paramGridLayout)
+        min_blank_txt.setgridlayoutparams(4, 0)
+        min_blank_txt.setwidth(145)
+        
+        min_blank_spc = tg.EditText(
+            activity,
+            str(c.MIN_SPACES_ON_BOARD),
+            paramGridLayout,
+            singleline=True,
+            inputtype="number",
+        )
+        min_blank_spc.setgridlayoutparams(5, 0)
+        min_blank_spc.setwidth(145)
 
         save_btn = create_button(activity, "Save settings", scrollLinear)
 
@@ -347,6 +361,7 @@ def main():
                 max_farm_session = int(max_farm_act.gettext())
                 similarity_thresh = float(sim_thresh.gettext())
                 max_generator_group_numbers = int(gen_min_groups.gettext())
+                min_blank_space_num = int(min_blank_spc.gettext())
                 variables_dict = {
                     "RUN_ON_MOBILE": True,
                     "IGNORED_MATCH_POSITIONS": c.IGNORED_MATCH_POSITIONS,
@@ -369,6 +384,7 @@ def main():
                     "MAX_FARM_SESSIONS": max_farm_session,
                     "SIMILARITY_THRESHOLD": similarity_thresh,
                     "MAX_GENERATOR_GROUP_NUMBERS": max_generator_group_numbers,
+                    "MIN_SPACES_ON_BOARD": min_blank_space_num
                 }
                 json_data = json.dumps(variables_dict, indent=4)
                 with io.open(c.config_path, "w") as json_file:

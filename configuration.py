@@ -62,6 +62,9 @@ DEL_BTN_TOP = 0.240
 # Space between grid squares, px
 GRID_PADDING = 7
 
+# Minimum blank spaces on the grid for bot to run
+MIN_SPACES_ON_BOARD = 2
+
 # Check if config file exists file exists and load the parameters
 config_path = os.path.join(os.getcwd(), "bot_config.json")
 
@@ -90,5 +93,6 @@ if os.path.exists(config_path):
     MAX_FARM_SESSIONS = loaded_data["MAX_FARM_SESSIONS"]
     SIMILARITY_THRESHOLD = loaded_data["SIMILARITY_THRESHOLD"]
     MAX_GENERATOR_GROUP_NUMBERS = loaded_data["MAX_GENERATOR_GROUP_NUMBERS"]
+    MIN_SPACES_ON_BOARD = loaded_data["MIN_SPACES_ON_BOARD"]
 else:
     print(f"The file {config_path} does not exist. Using default values.")

@@ -81,13 +81,18 @@ def extract_imgs_from_contours(img, contours):
     proc_img = apply_processing(img)
     # Apply morphological dilation to the processed image
     proc_img = cv2.dilate(proc_img, img_dilation_kernel, iterations=1)
+    count_blanks = 0
     for contour in contours:
         # Extract blobs from each contour using the adaptive threshold function
         x, y, w, h = cv2.boundingRect(contour)
         cropped_img = proc_img[y : y + h, x : x + w]
-        imgs_list.append(cropped_img)
+        # Check if the image is blank and count blank images to see if there's space left on grid
+        is_blank = is_blank_img(cropped_img)
+        if is_blank:
+            count_blanks += 1
+        imgs_list.append([cropped_img, is_blank])
 
-    return imgs_list
+    return imgs_list, count_blanks
 
 
 # Determines if an image is blank based on the number of non-zero pixels, using a specified threshold.
@@ -120,7 +125,7 @@ def group_similar_imgs(imgs, compare_threshold=0.8):
     visited = set()
 
     for i, img1 in enumerate(imgs):
-        if is_blank_img(img1) or i < c.IGNORED_MATCH_POSITIONS:
+        if img1[1] or i < c.IGNORED_MATCH_POSITIONS:
             visited.add(i)
             continue
 
@@ -129,11 +134,11 @@ def group_similar_imgs(imgs, compare_threshold=0.8):
             found_match = False  # Flag to check if any similar blob is found
 
             for j, img2 in enumerate(imgs):
-                if is_blank_img(img2) or j < c.IGNORED_MATCH_POSITIONS:
+                if img2[1] or j < c.IGNORED_MATCH_POSITIONS:
                     visited.add(j)
                     continue
                 if i != j and j not in visited:
-                    similarity = compare_imgs(img1, img2)
+                    similarity = compare_imgs(img1[0], img2[0])
                     if similarity > compare_threshold:
                         group.append(j)
                         visited.add(j)
@@ -378,8 +383,8 @@ def combine_binary_images(extracted_imgs, columns=7, rows=9):
         )
 
     # Resize images to have the same height (assuming they have the same width)
-    height = extracted_imgs[0].shape[0]
-    resized_imgs = [cv2.resize(img, (height, height)) for img in extracted_imgs]
+    height = extracted_imgs[0][0].shape[0]
+    resized_imgs = [cv2.resize(img[0], (height, height)) for img in extracted_imgs]
 
     # Combine images into a grid
     combined_img = np.vstack(
@@ -453,7 +458,11 @@ def main():
         # Read the screenshot in memory
         img = get_screen_capture(device)
 
-        extracted_imgs = extract_imgs_from_contours(img, grid_contours)
+        extracted_imgs, count_blanks = extract_imgs_from_contours(img, grid_contours)
+        
+        if count_blanks < c.MIN_SPACES_ON_BOARD:
+            print("There's no space left on the grid. Bot will exit.")
+            break
 
         grouped_items = group_similar_imgs(extracted_imgs, c.SIMILARITY_THRESHOLD)
 
