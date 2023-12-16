@@ -253,7 +253,7 @@ def swipe_elements(device, contours, groups, roi):
 
             # Swipe from the center of the first contour to the center of the second contour
             device.input_swipe(
-                x1 + w1 // 2, y1 + h1 // 2, x2 + w2 // 2, y2 + h2 // 2, 50
+                x1 + w1 // 2, y1 + h1 // 2, x2 + w2 // 2, y2 + h2 // 2, 80
             )
 
             # Update the set of already swiped positions
@@ -272,14 +272,14 @@ def try_to_delivery(device, img_shape):
 
     # Swipe through the delivery list and try to press the "Delivery" button
     for i in range(6):
-        device.input_swipe(width - 100, delivery_top, width // 2, delivery_top, 100)
+        device.input_swipe(width - 100, delivery_top, width // 2, delivery_top, 40)
         device.input_tap(width // 2, delivery_btn_top)
         device.input_tap(int(width // 1.5), delivery_btn_top)
         device.input_tap(int(width // 1.2), delivery_btn_top)
 
     # Go back
     for i in range(6):
-        device.input_swipe(width // 2, delivery_top, width - 100, delivery_top, 100)
+        device.input_swipe(width // 2, delivery_top, width - 100, delivery_top, 40)
 
 
 #  Generates objects by clicking on specified generator positions.
@@ -513,7 +513,7 @@ def main():
         swipe_elements(device, grid_contours, grouped_items, roi)
 
         # Add an delay after each iteration to let all items to merge
-        time.sleep(0.2)
+        time.sleep(0.1)
 
         if c.AUTOMATIC_DELIVERY:
             try_to_delivery(device, img.shape)
