@@ -459,15 +459,18 @@ def main():
         img = get_screen_capture(device)
 
         extracted_imgs, count_blanks = extract_imgs_from_contours(img, grid_contours)
-        
-        if count_blanks < c.MIN_SPACES_ON_BOARD:
-            print("There's no space left on the grid. Bot will exit.")
-            break
 
         grouped_items = group_similar_imgs(extracted_imgs, c.SIMILARITY_THRESHOLD)
 
         if not check_app_in_foreground(device, c.TARGET_APP_PKG):
             print("Aliexpress app is not running anymore")
+            break
+            
+        # Swipe duplicates one over another
+        swipe_elements(device, grid_contours, grouped_items, roi)
+        
+        if count_blanks + len(grouped_items) < c.MIN_SPACES_ON_BOARD:
+            print("There's no space left on the grid and no swipe possible. Bot will exit.")
             break
 
         # Check the energy left and matches
@@ -508,9 +511,6 @@ def main():
         if not check_app_in_foreground(device, c.TARGET_APP_PKG):
             print("Aliexpress app is not running anymore")
             break
-
-        # Swipe duplicates one over another
-        swipe_elements(device, grid_contours, grouped_items, roi)
 
         # Add an delay after each iteration to let all items to merge
         time.sleep(0.1)
