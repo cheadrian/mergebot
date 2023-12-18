@@ -29,6 +29,9 @@ MAX_FARM_SESSIONS = 3
 # The first 10 squares will be ignored. Adjust to your number of e.g., generators.
 IGNORED_MATCH_POSITIONS = 9
 
+# If your ignored position aren't in order then you can add selected ones into a list
+ADDITIONAL_IGNORED_POSITIONS = [1,14]
+
 # Define the similarity threshold between items
 SIMILARITY_THRESHOLD = 0.85
 
@@ -74,6 +77,7 @@ if os.path.exists(config_path):
 
     RUN_ON_MOBILE = loaded_data["RUN_ON_MOBILE"]
     IGNORED_MATCH_POSITIONS = loaded_data["IGNORED_MATCH_POSITIONS"]
+    ADDITIONAL_IGNORED_POSITIONS = loaded_data["ADDITIONAL_IGNORED_POSITIONS"]
     GENERATOR_POSITIONS = loaded_data["GENERATOR_POSITIONS"]
     ROI_TOP = loaded_data["ROI_TOP"]
     ROI_BOTTOM = loaded_data["ROI_BOTTOM"]

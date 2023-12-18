@@ -191,15 +191,21 @@ def main():
         image_viewer.setlinearlayoutparams(0)
         image_viewer.setheight(rootHeight - int(rootHeight / 7), True)
         
-        paramGridLayout = tg.GridLayout(activity, 2, 3, scrollLinear)
-        ingore_matches_txt = tg.TextView(activity, "Ignored positions", paramGridLayout)
-        ingore_matches_txt.setgridlayoutparams(0, 0)
-        ingore_matches_txt.setwidth(145)
+        paramGridLayout = tg.GridLayout(activity, 2, 4, scrollLinear)
+        
+        ignore_matches_txt = tg.TextView(activity, "Ignore first N", paramGridLayout)
+        ignore_matches_txt.setgridlayoutparams(0, 0)
+        ignore_matches_txt.setwidth(100)
+        
+        ignore_matches_add_txt = tg.TextView(activity, "Ignore list", paramGridLayout)
+        ignore_matches_add_txt.setgridlayoutparams(0, 1)
+        ignore_matches_add_txt.setwidth(100)
+        
         generator_matches_txt = tg.TextView(
             activity, "Generator positions", paramGridLayout
         )
-        generator_matches_txt.setgridlayoutparams(0, 1)
-        generator_matches_txt.setwidth(145)
+        generator_matches_txt.setgridlayoutparams(0, 2)
+        generator_matches_txt.setwidth(100)
 
         ignored_matches = tg.EditText(
             activity,
@@ -209,7 +215,18 @@ def main():
             inputtype="number",
         )
         ignored_matches.setgridlayoutparams(1, 0)
-        ignored_matches.setwidth(145)
+        ignored_matches.setwidth(100)
+        
+        ignored_matches_add = tg.EditText(
+            activity,
+            ",".join(map(str, c.ADDITIONAL_IGNORED_POSITIONS)),
+            paramGridLayout,
+            singleline=True,
+            inputtype="number",
+        )
+        ignored_matches_add.setgridlayoutparams(1, 1)
+        ignored_matches_add.setwidth(100)
+        
         generators_matches = tg.EditText(
             activity,
             ",".join(map(str, c.GENERATOR_POSITIONS)),
@@ -217,13 +234,11 @@ def main():
             singleline=True,
             inputtype="number",
         )
-        generators_matches.setgridlayoutparams(1, 1)
-        generators_matches.setwidth(145)
+        generators_matches.setgridlayoutparams(1, 2)
+        generators_matches.setwidth(100)
 
         set_param_btn = create_button(activity, "Set", paramGridLayout)
-        set_param_btn.setgridlayoutparams(0, 2, 2, 1)
-        
-        
+        set_param_btn.setgridlayoutparams(0, 3, 2, 1)
 
         settingsGridLayout = tg.GridLayout(activity, 6, 2, scrollLinear)
         min_eng_lvl_txt = tg.TextView(activity, "Minimum energy level", settingsGridLayout)
@@ -371,6 +386,7 @@ def main():
                 variables_dict = {
                     "RUN_ON_MOBILE": True,
                     "IGNORED_MATCH_POSITIONS": c.IGNORED_MATCH_POSITIONS,
+                    "ADDITIONAL_IGNORED_POSITIONS": c.ADDITIONAL_IGNORED_POSITIONS,
                     "GENERATOR_POSITIONS": c.GENERATOR_POSITIONS,
                     "ROI_TOP": c.ROI_TOP,
                     "ROI_BOTTOM": c.ROI_BOTTOM,
@@ -399,6 +415,9 @@ def main():
                 exit()
             if event.type == tg.Event.click and event.value["id"] == set_param_btn:
                 c.IGNORED_MATCH_POSITIONS = int(ignored_matches.gettext())
+                c.ADDITIONAL_IGNORED_POSITIONS = [
+                    int(i) for i in ignored_matches_add.gettext().split(",")
+                ]
                 c.GENERATOR_POSITIONS = [
                     int(i) for i in generators_matches.gettext().split(",")
                 ]

@@ -125,7 +125,7 @@ def group_similar_imgs(imgs, compare_threshold=0.8):
     visited = set()
 
     for i, img1 in enumerate(imgs):
-        if img1[1] or i < c.IGNORED_MATCH_POSITIONS:
+        if img1[1] or i < c.IGNORED_MATCH_POSITIONS or (i + 1) in c.ADDITIONAL_IGNORED_POSITIONS:
             visited.add(i)
             continue
 
@@ -134,7 +134,7 @@ def group_similar_imgs(imgs, compare_threshold=0.8):
             found_match = False  # Flag to check if any similar blob is found
 
             for j, img2 in enumerate(imgs):
-                if img2[1] or j < c.IGNORED_MATCH_POSITIONS:
+                if img2[1] or j < c.IGNORED_MATCH_POSITIONS or (i + 1) in c.ADDITIONAL_IGNORED_POSITIONS:
                     visited.add(j)
                     continue
                 if i != j and j not in visited:
@@ -201,6 +201,10 @@ def annotate_image(img, contours, groups, roi):
     # Draw ignored contours
     for ig in range(c.IGNORED_MATCH_POSITIONS):
         cv2.drawContours(img, [contours[ig]], 0, (0, 0, 255), 4)
+        
+    # Draw addititional ignored contours
+    for ig in c.ADDITIONAL_IGNORED_POSITIONS:
+        cv2.drawContours(img, [contours[ig - 1]], 0, (0, 0, 255), 4)
 
     if c.CHECK_ENERGY_LEVEL:
         for pos in c.GENERATOR_POSITIONS:
