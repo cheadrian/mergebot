@@ -80,6 +80,10 @@ def annotate_image(img):
     for ig in range(c.IGNORED_MATCH_POSITIONS):
         cv2.drawContours(img, [contours[ig]], 0, (0, 0, 255), 4)
 
+    # Draw addititional ignored contours
+    for ig in c.ADDITIONAL_IGNORED_POSITIONS:
+        cv2.drawContours(img, [contours[ig - 1]], 0, (0, 0, 255), 4)
+        
     # Draw generator positions
     for pos in c.GENERATOR_POSITIONS:
         cv2.drawContours(img, [contours[pos - 1]], 0, (0, 255, 0), 8)
@@ -141,6 +145,52 @@ def main():
             activity, "Load screenshot", screenshotLinearHorizontal
         )
 
+        positionHorizontalScroll = tg.HorizontalScrollView(activity, scrollLinear)
+        positionLinearHorizontal = tg.LinearLayout(
+            activity, positionHorizontalScroll, False
+        )
+
+        _ = create_button(activity, "ROI", positionLinearHorizontal)
+        top_pl_roi_btn = create_button(activity, "↑+", positionLinearHorizontal)
+        top_mn_roi_btn = create_button(activity, "↑-", positionLinearHorizontal)
+        bot_pl_roi_btn = create_button(activity, "↓+", positionLinearHorizontal)
+        bot_mn_roi_btn = create_button(activity, "↓-", positionLinearHorizontal)
+        left_pl_roi_btn = create_button(activity, "↔+", positionLinearHorizontal)
+        left_mn_roi_btn = create_button(activity, "↔-", positionLinearHorizontal)
+        grid_pl_roi_btn = create_button(activity, "G+", positionLinearHorizontal)
+        grid_mn_roi_btn = create_button(activity, "G-", positionLinearHorizontal)
+
+        _ = create_button(activity, "ENERGY", positionLinearHorizontal)
+        top_mn_eng_btn = create_button(activity, "↑", positionLinearHorizontal)
+        top_pl_eng_btn = create_button(activity, "↓", positionLinearHorizontal)
+        left_mn_eng_btn = create_button(activity, "←", positionLinearHorizontal)
+        left_pl_eng_btn = create_button(activity, "→", positionLinearHorizontal)
+
+        _ = create_button(activity, "GO", positionLinearHorizontal)
+        top_pl_go_btn = create_button(activity, "↑", positionLinearHorizontal)
+        top_mn_go_btn = create_button(activity, "↓", positionLinearHorizontal)
+        left_pl_go_btn = create_button(activity, "←", positionLinearHorizontal)
+        left_mn_go_btn = create_button(activity, "→", positionLinearHorizontal)
+
+        _ = create_button(activity, "X", positionLinearHorizontal)
+        top_pl_ex_btn = create_button(activity, "↑", positionLinearHorizontal)
+        top_mn_ex_btn = create_button(activity, "↓", positionLinearHorizontal)
+        left_pl_ex_btn = create_button(activity, "←", positionLinearHorizontal)
+        left_mn_ex_btn = create_button(activity, "→", positionLinearHorizontal)
+        
+        _ = create_button(activity, "D. SWIPE", positionLinearHorizontal)
+        top_pl_delswp_btn = create_button(activity, "↑", positionLinearHorizontal)
+        top_mn_delswp_btn = create_button(activity, "↓", positionLinearHorizontal)
+        
+        _ = create_button(activity, "D. BTN", positionLinearHorizontal)
+        top_pl_delb_btn = create_button(activity, "↑", positionLinearHorizontal)
+        top_mn_delb_btn = create_button(activity, "↓", positionLinearHorizontal)
+
+        _, rootHeight = rootLinear.getdimensions()
+        image_viewer = tg.ImageView(activity, scrollLinear)
+        image_viewer.setlinearlayoutparams(0)
+        image_viewer.setheight(rootHeight - int(rootHeight / 7), True)
+        
         paramGridLayout = tg.GridLayout(activity, 2, 3, scrollLinear)
         ingore_matches_txt = tg.TextView(activity, "Ignored positions", paramGridLayout)
         ingore_matches_txt.setgridlayoutparams(0, 0)
@@ -172,59 +222,15 @@ def main():
 
         set_param_btn = create_button(activity, "Set", paramGridLayout)
         set_param_btn.setgridlayoutparams(0, 2, 2, 1)
-
-        energyHorizontalScroll = tg.HorizontalScrollView(activity, scrollLinear)
-        energyLinearHorizontal = tg.LinearLayout(
-            activity, energyHorizontalScroll, False
-        )
-
-        _ = create_button(activity, "ROI", energyLinearHorizontal)
-        top_pl_roi_btn = create_button(activity, "↑+", energyLinearHorizontal)
-        top_mn_roi_btn = create_button(activity, "↑-", energyLinearHorizontal)
-        bot_pl_roi_btn = create_button(activity, "↓+", energyLinearHorizontal)
-        bot_mn_roi_btn = create_button(activity, "↓-", energyLinearHorizontal)
-        left_pl_roi_btn = create_button(activity, "↔+", energyLinearHorizontal)
-        left_mn_roi_btn = create_button(activity, "↔-", energyLinearHorizontal)
-        grid_pl_roi_btn = create_button(activity, "G+", energyLinearHorizontal)
-        grid_mn_roi_btn = create_button(activity, "G-", energyLinearHorizontal)
-
-        _ = create_button(activity, "ENERGY", energyLinearHorizontal)
-        top_mn_eng_btn = create_button(activity, "↑", energyLinearHorizontal)
-        top_pl_eng_btn = create_button(activity, "↓", energyLinearHorizontal)
-        left_mn_eng_btn = create_button(activity, "←", energyLinearHorizontal)
-        left_pl_eng_btn = create_button(activity, "→", energyLinearHorizontal)
-
-        _ = create_button(activity, "GO", energyLinearHorizontal)
-        top_pl_go_btn = create_button(activity, "↑", energyLinearHorizontal)
-        top_mn_go_btn = create_button(activity, "↓", energyLinearHorizontal)
-        left_pl_go_btn = create_button(activity, "←", energyLinearHorizontal)
-        left_mn_go_btn = create_button(activity, "→", energyLinearHorizontal)
-
-        _ = create_button(activity, "X", energyLinearHorizontal)
-        top_pl_ex_btn = create_button(activity, "↑", energyLinearHorizontal)
-        top_mn_ex_btn = create_button(activity, "↓", energyLinearHorizontal)
-        left_pl_ex_btn = create_button(activity, "←", energyLinearHorizontal)
-        left_mn_ex_btn = create_button(activity, "→", energyLinearHorizontal)
         
-        _ = create_button(activity, "D. SWIPE", energyLinearHorizontal)
-        top_pl_delswp_btn = create_button(activity, "↑", energyLinearHorizontal)
-        top_mn_delswp_btn = create_button(activity, "↓", energyLinearHorizontal)
         
-        _ = create_button(activity, "D. BTN", energyLinearHorizontal)
-        top_pl_delb_btn = create_button(activity, "↑", energyLinearHorizontal)
-        top_mn_delb_btn = create_button(activity, "↓", energyLinearHorizontal)
 
-        _, rootHeight = rootLinear.getdimensions()
-        image_viewer = tg.ImageView(activity, scrollLinear)
-        image_viewer.setlinearlayoutparams(0)
-        image_viewer.setheight(rootHeight - int(rootHeight / 7), True)
-
-        paramGridLayout = tg.GridLayout(activity, 6, 2, scrollLinear)
-        min_eng_lvl_txt = tg.TextView(activity, "Minimum energy level", paramGridLayout)
+        settingsGridLayout = tg.GridLayout(activity, 6, 2, scrollLinear)
+        min_eng_lvl_txt = tg.TextView(activity, "Minimum energy level", settingsGridLayout)
         min_eng_lvl_txt.setgridlayoutparams(0, 0)
         min_eng_lvl_txt.setwidth(145)
         max_farm_act_txt = tg.TextView(
-            activity, "Maximum farm actions", paramGridLayout
+            activity, "Maximum farm actions", settingsGridLayout
         )
         max_farm_act_txt.setgridlayoutparams(0, 1)
         max_farm_act_txt.setwidth(145)
@@ -232,7 +238,7 @@ def main():
         min_eng_lvl = tg.EditText(
             activity,
             str(c.MIN_ENERGY_LEVEL),
-            paramGridLayout,
+            settingsGridLayout,
             singleline=True,
             inputtype="number",
         )
@@ -241,18 +247,18 @@ def main():
         max_farm_act = tg.EditText(
             activity,
             str(c.MAX_FARM_SESSIONS),
-            paramGridLayout,
+            settingsGridLayout,
             singleline=True,
             inputtype="number",
         )
         max_farm_act.setgridlayoutparams(1, 1)
         max_farm_act.setwidth(145)
 
-        sim_thresh_txt = tg.TextView(activity, "Similarity threshold", paramGridLayout)
+        sim_thresh_txt = tg.TextView(activity, "Similarity threshold", settingsGridLayout)
         sim_thresh_txt.setgridlayoutparams(2, 0)
         sim_thresh_txt.setwidth(145)
         gen_min_groups_txt = tg.TextView(
-            activity, "Press generator when minimum groups number", paramGridLayout
+            activity, "Press generator when minimum groups number", settingsGridLayout
         )
         gen_min_groups_txt.setgridlayoutparams(2, 1)
         gen_min_groups_txt.setwidth(145)
@@ -260,7 +266,7 @@ def main():
         sim_thresh = tg.EditText(
             activity,
             str(c.SIMILARITY_THRESHOLD),
-            paramGridLayout,
+            settingsGridLayout,
             singleline=True,
             inputtype="number",
         )
@@ -269,21 +275,21 @@ def main():
         gen_min_groups = tg.EditText(
             activity,
             str(c.MAX_GENERATOR_GROUP_NUMBERS),
-            paramGridLayout,
+            settingsGridLayout,
             singleline=True,
             inputtype="number",
         )
         gen_min_groups.setgridlayoutparams(3, 1)
         gen_min_groups.setwidth(145)
         
-        min_blank_txt = tg.TextView(activity, "Minimum blank spaces", paramGridLayout)
+        min_blank_txt = tg.TextView(activity, "Minimum blank spaces", settingsGridLayout)
         min_blank_txt.setgridlayoutparams(4, 0)
         min_blank_txt.setwidth(145)
         
         min_blank_spc = tg.EditText(
             activity,
             str(c.MIN_SPACES_ON_BOARD),
-            paramGridLayout,
+            settingsGridLayout,
             singleline=True,
             inputtype="number",
         )
