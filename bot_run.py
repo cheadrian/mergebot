@@ -4,6 +4,7 @@ import numpy as np
 import time
 import configuration as c
 import threading
+import os
 
 
 # Import Termux:GUI to diplay overlay if script is running on Android
@@ -24,8 +25,7 @@ def create_overlay_button(activity, text, layout, width=40):
 
 
 # Create an overlay with buttons to control bot state
-def display_overlay_on_android(height):
-    connection = tg.Connection()
+def display_overlay_on_android(height, connection):
     activity = tg.Activity(connection, tid=110, overlay=True)
     activity.setposition(9999, (c.DEL_TOP / 4.5) * height)
     activity.keepscreenon(True)
@@ -39,7 +39,7 @@ def display_overlay_on_android(height):
     
     time.sleep(1)
             
-    return connection, play_pause_btn, farm_btn, exit_btn
+    return play_pause_btn, farm_btn, exit_btn
     
     
 # Set flags for next action when button press
@@ -549,14 +549,23 @@ def debug_display_img(img, grid_contours, grouped_items, roi, extracted_imgs):
 
 def main():
     print("Make sure you are connected to the ADB, check `adb devices`!\n")
-
+    # Starting adb daemon server
+    os.system("adb start-server")
     time.sleep(1)
 
     # Connect to ADB
     client = AdbClient(host="127.0.0.1", port=5037)
     devices = client.devices()
+    
+    # Create an Termux:GUI connection
+    if c.RUN_ON_MOBILE:
+        connection = tg.Connection()
 
+    # If no device is detected, open the developer options
     if len(devices) == 0:
+        if c.RUN_ON_MOBILE:
+            connection.toast("Please connect to ADB Wi-Fi IP from developer options", long = True)
+            os.system("am start -a com.android.settings.APPLICATION_DEVELOPMENT_SETTINGS")
         print("No device found. Please connect to device using ADB!")
         return
 
@@ -574,7 +583,7 @@ def main():
     
     # Display control overlay on mobile and create an thread to verify input
     if c.RUN_ON_MOBILE:
-        connection, play_pause_id, farm_id, exit_id = display_overlay_on_android(height)
+        play_pause_id, farm_id, exit_id = display_overlay_on_android(height, connection)
         watcher = threading.Thread(
                             target=action_on_overlay_button_press, 
                             args=(connection, play_pause_id, farm_id, exit_id), 
