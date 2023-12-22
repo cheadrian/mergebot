@@ -114,7 +114,7 @@ if c.CHECK_ENERGY_LEVEL:
     
 
 #  Applies image processing techniques, including Gaussian blur and Adaptive Thresholding, Sobel edge detection or simple thresholding.
-def apply_processing(img, sob_thresh=35):
+def apply_processing(img, sob_thresh=30):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     # Extract edges using Sobel
@@ -151,7 +151,7 @@ def generate_grid_contours(img, roi, padding=5):
 
 
 # Extracts images from a list of contours. Applies image processing (Sobel edge detection) and morphological dilation for better blob extraction.
-img_dilation_kernel = np.ones((7, 7), np.uint8)
+img_dilation_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
 
 
 def extract_imgs_from_contours(img, contours):
