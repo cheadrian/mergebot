@@ -3,6 +3,83 @@ import cv2
 import numpy as np
 import time
 import configuration as c
+import threading
+
+
+# Import Termux:GUI to diplay overlay if script is running on Android
+if c.RUN_ON_MOBILE:
+    import termuxgui as tg
+    
+
+# A function that generates a button with specified text, layout, and optional width.
+def create_overlay_button(activity, text, layout, width=40):
+    button = tg.Button(activity, text, layout)
+    button.settextsize(12)
+    button.setlinearlayoutparams(1)
+    if width:
+        button.setwidth(width)
+        button.setheight(width)
+
+    return button
+
+
+# Create an overlay with buttons to control bot state
+def display_overlay_on_android(height):
+    connection = tg.Connection()
+    activity = tg.Activity(connection, tid=110, overlay=True)
+    activity.setposition(9999, (c.DEL_TOP / 4.5) * height)
+    activity.keepscreenon(True)
+    activity.sendoverlayevents(False)
+    
+    rootLinear = tg.LinearLayout(activity, vertical=False)
+    
+    play_pause_btn = create_overlay_button(activity, "⏯️", rootLinear) 
+    farm_btn = create_overlay_button(activity, "🧑‍🌾", rootLinear) 
+    exit_btn = create_overlay_button(activity, "❌", rootLinear) 
+    
+    time.sleep(1)
+            
+    return connection, play_pause_btn, farm_btn, exit_btn
+    
+    
+# Set flags for next action when button press
+pause_flag, farm_flag, exit_flag = [False] * 3
+def action_on_overlay_button_press(connection, play_pause_id, farm_id, exit_id):
+    global pause_flag, farm_flag, exit_flag
+    for event in connection.events():
+        if event and event.type == tg.Event.click and event.value["id"] == play_pause_id:
+            pause_flag = not pause_flag
+            if pause_flag:
+                connection.toast("Bot is pausing")
+            else:
+                connection.toast("Bot starting")
+        if event and event.type == tg.Event.click and event.value["id"] == farm_id:
+            farm_flag = True and pause_flag
+            if farm_flag:
+                connection.toast("Starting energy farm")
+            else:
+                connection.toast("Please pause before farm")
+        if event and event.type == tg.Event.click and event.value["id"] == exit_id:
+            exit_flag = True
+            connection.toast("Closing bot")
+
+
+# Check the state of the button flags
+def do_button_flags(img, device):
+    global pause_flag, farm_flag, exit_flag 
+    while pause_flag:
+        time.sleep(0.5)
+        # If bot is paused and manual farm energy is requsted, start to farm
+        if farm_flag:
+            print("Starting to farm energy.")
+            # Touch the game window to focus back on it
+            device.input_tap(img.shape[1] // 2, img.shape[0] // 2)
+            farm_energy(img, device)
+            farm_flag = False
+        if exit_flag:
+            exit()
+    if exit_flag:
+        exit()            
 
 
 # Get and image from ADB and transform it to opencv image
@@ -34,6 +111,7 @@ if c.CHECK_ENERGY_LEVEL:
     import pytesseract
 
     print("Make sure you have Tesseract installed on the system and added to PATH")
+    
 
 #  Applies image processing techniques, including Gaussian blur and Adaptive Thresholding, Sobel edge detection or simple thresholding.
 def apply_processing(img, sob_thresh=35):
@@ -269,6 +347,7 @@ def swipe_elements(device, contours, groups, roi):
         device.input_tap(x1, y1)
 
 
+# Try to deliver generated items
 def try_to_delivery(device, img_shape):
     height, width, _ = img_shape
     delivery_top = int(c.DEL_TOP * height)
@@ -286,7 +365,7 @@ def try_to_delivery(device, img_shape):
         device.input_swipe(width // 2, delivery_top, width - 100, delivery_top, 40)
 
 
-#  Generates objects by clicking on specified generator positions.
+# Generates objects by clicking on specified generator positions.
 def generate_objects(device, contours, img):
     energy_left = get_energy_level(img)
     for pos in c.GENERATOR_POSITIONS:
@@ -367,13 +446,18 @@ def farm_energy(img, device):
     for i in range(c.MAX_FARM_SESSIONS):
         # Hit the "Go" button and wait for X seconds
         device.input_tap(width * c.GO_LEFT, height * c.GO_TOP)
-        time.sleep(17)
+        # Wait for product list while check if bot still running
+        elapsed_time = 0
+        while elapsed_time < 17:
+            check_if_should_exit(device)
+            time.sleep(1)
+            elapsed_time += 1
         device.input_keyevent("BACK")
         time.sleep(2)
         # Hit the "Claim" button
         device.input_tap(width * c.GO_LEFT, height * c.GO_TOP)
         time.sleep(3)
-    # Exit task menu
+    # Exit tasks menu
     device.input_tap(width * c.EX_LEFT, height * c.EX_TOP)
     time.sleep(1)
 
@@ -401,13 +485,32 @@ def combine_binary_images(extracted_imgs, columns=7, rows=9):
     return combined_img
 
 
-#  Checks if the current app running on the device is Aliexpress and the screen is on.
+# Checks if the current app running on the device is Aliexpress and the screen is on.
 def check_app_in_foreground(device, target):
-    result = device.shell("dumpsys window | grep mCurrentFocus")
-    if target in result:
+    result = device.shell("dumpsys window | grep -E 'mCurrentFocus'")
+    if target in result or 'com.termux.gui' in result:
         return True
 
     return False
+
+
+# Check if the space on the grid is sufficient
+def check_if_space_left(count_blanks, grouped_items):
+    if count_blanks + len(grouped_items) < c.MIN_SPACES_ON_BOARD:
+        print("There's no space left on the grid and no swipe possible. Bot will exit.")
+        exit()
+        
+
+# Check if the bot should terminate and exit
+def check_if_should_exit(device):
+    global exit_flag
+    # Stop when user close Aliexpress app 
+    if not check_app_in_foreground(device, c.TARGET_APP_PKG):
+        print("Aliexpress app is not running anymore")
+        exit()
+    # Stop farming when user close the bot with button
+    if exit_flag:
+        exit()
 
 
 # Waits for the Aliexpress app to be opened on the device.
@@ -420,6 +523,27 @@ def wait_for_ali_app(device):
         time.sleep(15)
         if not check_app_in_foreground(device, c.TARGET_APP_PKG):
             print("Merge Boss is not in focus. Exiting script")
+            exit()
+            
+            
+# These are for debugging and calibration purposes
+def debug_display_img(img, grid_contours, grouped_items, roi, extracted_imgs):
+    if DISPLAY_EXTRACTED_IMGS:
+        display_extracted_img = combine_binary_images(extracted_imgs)
+        res_display_extracted_img = resize_image(display_extracted_img)
+        cv2.imshow("Extracted images", res_display_extracted_img)
+
+    if DISPLAY_ANNOTATED_IMGS:
+        annotated_img = annotate_image(img, grid_contours, grouped_items, roi)
+
+        # Resize image for display
+        res_annotated_img = resize_image(annotated_img)
+
+        # Display the screenshot with annotations
+        cv2.imshow("Display annotations", res_annotated_img)
+
+        if cv2.waitKey(20) & 0xFF == ord("q"):
+            cv2.destroyAllWindows()
             exit()
 
 
@@ -447,6 +571,16 @@ def main():
 
     # Only try to merge objects with a similarity above this threshold
     height, width, _ = img.shape
+    
+    # Display control overlay on mobile and create an thread to verify input
+    if c.RUN_ON_MOBILE:
+        connection, play_pause_id, farm_id, exit_id = display_overlay_on_android(height)
+        watcher = threading.Thread(
+                            target=action_on_overlay_button_press, 
+                            args=(connection, play_pause_id, farm_id, exit_id), 
+                            daemon=True
+                  )
+        watcher.start()
 
     # Define the region of interest for duplicate findings
     # Top, bottom, left, right padding
@@ -459,23 +593,19 @@ def main():
     farm_the_energy = c.AUTO_FARM_ENERGY
 
     while True:
-        # Read the screenshot in memory
+        do_button_flags(img, device)
+            
         img = get_screen_capture(device)
 
         extracted_imgs, count_blanks = extract_imgs_from_contours(img, grid_contours)
 
         grouped_items = group_similar_imgs(extracted_imgs, c.SIMILARITY_THRESHOLD)
 
-        if not check_app_in_foreground(device, c.TARGET_APP_PKG):
-            print("Aliexpress app is not running anymore")
-            break
+        check_if_should_exit(device)
             
-        # Swipe duplicates one over another
         swipe_elements(device, grid_contours, grouped_items, roi)
         
-        if count_blanks + len(grouped_items) < c.MIN_SPACES_ON_BOARD:
-            print("There's no space left on the grid and no swipe possible. Bot will exit.")
-            break
+        check_if_space_left(count_blanks, grouped_items)
 
         # Check the energy left and matches
         if c.CHECK_ENERGY_LEVEL and len(grouped_items) <= c.MAX_GENERATOR_GROUP_NUMBERS:
@@ -493,31 +623,9 @@ def main():
                     print("No energy to farm. Exit.")
                     break
 
-        # These are for debugging and calibration purposes
-        if DISPLAY_EXTRACTED_IMGS:
-            display_extracted_img = combine_binary_images(extracted_imgs)
-            res_display_extracted_img = resize_image(display_extracted_img)
-            cv2.imshow("Extracted images", res_display_extracted_img)
+        debug_display_img(img, grid_contours, grouped_items, roi, extracted_imgs)
 
-        if DISPLAY_ANNOTATED_IMGS:
-            annotated_img = annotate_image(img, grid_contours, grouped_items, roi)
-
-            # Resize image for display
-            res_annotated_img = resize_image(annotated_img)
-
-            # Display the screenshot with annotations
-            cv2.imshow("Display annotations", res_annotated_img)
-
-            if cv2.waitKey(20) & 0xFF == ord("q"):
-                break
-                cv2.destroyAllWindows()
-
-        if not check_app_in_foreground(device, c.TARGET_APP_PKG):
-            print("Aliexpress app is not running anymore")
-            break
-
-        # Add an delay after each iteration to let all items to merge
-        time.sleep(0.1)
+        check_if_should_exit(device)
 
         if c.AUTOMATIC_DELIVERY:
             try_to_delivery(device, img.shape)
