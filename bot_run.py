@@ -272,9 +272,9 @@ def annotate_image(img, contours, groups, roi):
     img = cv2.line(
         img, (width // 2, delivery_top), (width, delivery_top), (255, 255, 0), 10
     )
-    img = cv2.circle(img, (width // 2, delivery_btn_top), 20, (255, 50, 255), -1)
-    img = cv2.circle(img, (int(width // 1.5), delivery_btn_top), 20, (255, 50, 255), -1)
-    img = cv2.circle(img, (int(width // 1.2), delivery_btn_top), 20, (255, 50, 255), -1)
+    img = cv2.circle(img, (width - c.DEL_BTN_PADDING_RIGHT - (c.DEL_BTN_SPACING * 2), delivery_btn_top), 20, (255, 50, 255), -1)
+    img = cv2.circle(img, (width - c.DEL_BTN_PADDING_RIGHT - c.DEL_BTN_SPACING, delivery_btn_top), 20, (255, 50, 255), -1)
+    img = cv2.circle(img, (width - c.DEL_BTN_PADDING_RIGHT, delivery_btn_top), 20, (255, 50, 255), -1)
 
     # Draw ignored contours
     for ig in range(c.IGNORED_MATCH_POSITIONS):
@@ -356,9 +356,9 @@ def try_to_delivery(device, img_shape):
     # Swipe through the delivery list and try to press the "Delivery" button
     for i in range(6):
         device.input_swipe(width - 100, delivery_top, width // 2, delivery_top, 40)
-        device.input_tap(width // 2, delivery_btn_top)
-        device.input_tap(int(width // 1.5), delivery_btn_top)
-        device.input_tap(int(width // 1.2), delivery_btn_top)
+        device.input_tap(width - c.DEL_BTN_PADDING_RIGHT - (c.DEL_BTN_SPACING * 2), delivery_btn_top)
+        device.input_tap(width - c.DEL_BTN_PADDING_RIGHT - c.DEL_BTN_SPACING, delivery_btn_top)
+        device.input_tap(width - c.DEL_BTN_PADDING_RIGHT, delivery_btn_top)
 
     # Go back
     for i in range(6):

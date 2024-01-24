@@ -60,8 +60,12 @@ EX_TOP = 0.145  # 350px  height
 EX_LEFT = 0.926  # 1000px width
 # Delivery require list position
 DEL_TOP = 0.190
-# Delivery btn position
+# Delivery button position
 DEL_BTN_TOP = 0.240
+# Delivery button spacing from right to left
+DEL_BTN_SPACING = 225
+# Padding right of the delivery buttons
+DEL_BTN_PADDING_RIGHT = 125
 # Space between grid squares, px
 GRID_PADDING = 7
 
@@ -98,5 +102,7 @@ if os.path.exists(config_path):
     SIMILARITY_THRESHOLD = loaded_data["SIMILARITY_THRESHOLD"]
     MAX_GENERATOR_GROUP_NUMBERS = loaded_data["MAX_GENERATOR_GROUP_NUMBERS"]
     MIN_SPACES_ON_BOARD = loaded_data["MIN_SPACES_ON_BOARD"]
+    DEL_BTN_SPACING = loaded_data["DEL_BTN_SPACING"]
+    DEL_BTN_PADDING_RIGHT = loaded_data["DEL_BTN_PADDING_RIGHT"]
 else:
     print(f"The file {config_path} does not exist. Using default values.")

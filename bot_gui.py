@@ -72,9 +72,9 @@ def annotate_image(img):
     img = cv2.line(
         img, (width // 2, delivery_top), (width, delivery_top), (255, 255, 0), 10
     )
-    img = cv2.circle(img, (width // 2, delivery_btn_top), 20, (255, 50, 255), -1)
-    img = cv2.circle(img, (int(width // 1.5), delivery_btn_top), 20, (255, 50, 255), -1)
-    img = cv2.circle(img, (int(width // 1.2), delivery_btn_top), 20, (255, 50, 255), -1)
+    img = cv2.circle(img, (width - c.DEL_BTN_PADDING_RIGHT - (c.DEL_BTN_SPACING * 2), delivery_btn_top), 20, (255, 50, 255), -1)
+    img = cv2.circle(img, (width - c.DEL_BTN_PADDING_RIGHT - c.DEL_BTN_SPACING, delivery_btn_top), 20, (255, 50, 255), -1)
+    img = cv2.circle(img, (width - c.DEL_BTN_PADDING_RIGHT, delivery_btn_top), 20, (255, 50, 255), -1)
 
     # Draw grid
     for cnt in contours:
@@ -189,6 +189,12 @@ def main():
         _ = create_button(activity, "D. BTN", positionLinearHorizontal)
         top_pl_delb_btn = create_button(activity, "↑", positionLinearHorizontal)
         top_mn_delb_btn = create_button(activity, "↓", positionLinearHorizontal)
+        spce_pl_delb_btn = create_button(activity, "↹", positionLinearHorizontal)
+        spce_mn_delb_btn = create_button(activity, "⇎", positionLinearHorizontal)
+        padr_pl_delb_btn = create_button(activity, "←", positionLinearHorizontal)
+        padr_mn_delb_btn = create_button(activity, "→", positionLinearHorizontal)
+        
+        
 
         _, rootHeight = rootLinear.getdimensions()
         image_viewer = tg.ImageView(activity, scrollLinear)
@@ -381,6 +387,14 @@ def main():
                 c.DEL_BTN_TOP -= 0.002
             if event.type == tg.Event.click and event.value["id"] == top_mn_delb_btn:
                 c.DEL_BTN_TOP += 0.002
+            if event.type == tg.Event.click and event.value["id"] == spce_pl_delb_btn:
+                c.DEL_BTN_SPACING += 25
+            if event.type == tg.Event.click and event.value["id"] == spce_mn_delb_btn:
+                c.DEL_BTN_SPACING -= 25
+            if event.type == tg.Event.click and event.value["id"] == padr_pl_delb_btn:
+                c.DEL_BTN_PADDING_RIGHT += 25
+            if event.type == tg.Event.click and event.value["id"] == padr_mn_delb_btn:
+                c.DEL_BTN_PADDING_RIGHT -= 25   
             if event.type == tg.Event.click and event.value["id"] == save_btn:
                 min_energy_level = int(min_eng_lvl.gettext())
                 max_farm_session = int(max_farm_act.gettext())
@@ -410,7 +424,9 @@ def main():
                     "MAX_FARM_SESSIONS": max_farm_session,
                     "SIMILARITY_THRESHOLD": similarity_thresh,
                     "MAX_GENERATOR_GROUP_NUMBERS": max_generator_group_numbers,
-                    "MIN_SPACES_ON_BOARD": min_blank_space_num
+                    "MIN_SPACES_ON_BOARD": min_blank_space_num,
+                    "DEL_BTN_SPACING": c.DEL_BTN_SPACING,
+                    "DEL_BTN_PADDING_RIGHT": c.DEL_BTN_PADDING_RIGHT
                 }
                 json_data = json.dumps(variables_dict, indent=4)
                 with io.open(c.config_path, "w") as json_file:
