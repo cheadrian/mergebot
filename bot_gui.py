@@ -1,7 +1,11 @@
+import os
+if os.name == 'nt':
+    print("You should run the gui script only on Termux with Termux:GUI installed")
+    exit()
+
 import termuxgui as tg
 import time
 import io
-import os
 import cv2
 import numpy as np
 import json
