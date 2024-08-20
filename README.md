@@ -48,15 +48,20 @@ Now you should install the necessary pip packages:
 
 First make sure you have installed the [Termux](https://github.com/termux/termux-app/releases), [Termux:API](https://github.com/termux/termux-api/releases) and [Termux:GUI](https://github.com/termux/termux-gui/releases) APKs from git.
 
+If you want a faster mirror then use the `termux-change-repo` before everything else and select a mirror apropriate to your region - using space to select, enter to confirm.
+
 To setup on Termux, copy and paste the code below:
 
 ```bash
 yes | pkg update -y
+yes | pkg upgrade -y
 pkg install -y git opencv-python tesseract python android-tools termux-api
 pip install numpy pytesseract pure-python-adb termuxgui
 git clone https://github.com/cheadrian/mergebot
 cd ~/mergebot
 ```
+
+*Note:* Due to a change in Termux packages the OpenCV-Python has some broken simbols. Check the updates and the problem [description here](https://github.com/cheadrian/mergebot/issues/7).
 
 ### ADB pairing on Termux
 
