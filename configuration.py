@@ -4,32 +4,33 @@ import json
 # The name of the app, to check if it's running
 TARGET_APP_PKG = "com.alibaba.aliexpresshd/com.aliexpress.module.webview"
 
+# for debugging purposes, set to True to enable image saving
+IMAGE_DEBUG = False
+
 # If you run the script directly on mobile, set this to True to disable
 # incompatible functions, like real-time image view, and configure for this
 RUN_ON_MOBILE = False
 
 # If you want to check the energy level, you need Tesseract installed and configured
-# When the energy level is under 2, the game will exit
+# When the energy level is under MIN_ENERGY_LEVEL, the game will exit
 CHECK_ENERGY_LEVEL = True
 
 # Auto-press the generator when no match is found, only if check energy level is enabled
 if CHECK_ENERGY_LEVEL:
-    # Generator positions to press, in a list
-    GENERATOR_POSITIONS = [1, 2, 3, 4]
-    # When there's no match, generate objects from each of these generators
+    # When there's no match, generate objects from the generators
     # Minimum energy to generate items
-    MIN_ENERGY_LEVEL = 3
+    MIN_ENERGY_LEVEL = 2
 
 # Get the energy from the 15 seconds product list view
 AUTO_FARM_ENERGY = True and CHECK_ENERGY_LEVEL
 
-# Only try to get energy 3 times
-MAX_FARM_SESSIONS = 3
+# Only try to get energy 10 times
+MAX_FARM_SESSIONS = 10
 
-# The first 10 squares will be ignored. Adjust to your number of e.g., generators.
+# The first N squares will be ignored. Adjust to your number of e.g., generators.
 IGNORED_MATCH_POSITIONS = 9
 
-# If your ignored position aren't in order then you can add selected ones into a list
+# If your ignored positions aren't in order then you can add selected ones into a list
 ADDITIONAL_IGNORED_POSITIONS = [1,14]
 
 # Define the similarity threshold between items
@@ -42,37 +43,43 @@ MAX_GENERATOR_GROUP_NUMBERS = 1
 # Try to automatically delivery the items
 AUTOMATIC_DELIVERY = True
 
-# NOTE: you should adjust these based on your phone display resolution.
-# These are for 1080x2400 and represent percentages of height or width.
-ROI_TOP = 0.355  # 852px  height
-ROI_BOTTOM = 0.9025  # 2166px height
-ROI_PADDING = 0.0287  # 31px  width
+# NOTE: These values use relative coordinates (0.0-1.0 range) and work across different resolutions.
+# They represent percentages of height or width, making them resolution-independent.
+ROI_TOP = 0.497
+ROI_BOTTOM = 0.802
+ROI_PADDING = 0.029
 # Energy left number position
-ENG_TOP = 0.05  # 120px  height
-ENG_BOTTOM = 0.07  # 168px  height
-ENG_LEFT = 0.484  # 523px  width
-ENG_RIGHT = 0.566  # 612px  width
+ENG_TOP = 0.064
+ENG_BOTTOM = 0.084
+ENG_LEFT = 0.622
+ENG_RIGHT = 0.704
 # Energy browse deals "Go" button position
-GO_TOP = 0.6065  # 1455px height
-GO_LEFT = 0.276  # 298px  width
+GO_TOP = 0.62
+GO_LEFT = 0.276
 # Exit "X" button from task list position
-EX_TOP = 0.145  # 350px  height
-EX_LEFT = 0.926  # 1000px width
+EX_TOP = 0.15
+EX_LEFT = 0.922
 # Delivery require list position
-DEL_TOP = 0.190
+DEL_TOP = 0.318
 # Delivery button position
-DEL_BTN_TOP = 0.240
-# Delivery button spacing from right to left
-DEL_BTN_SPACING = 225
-# Padding right of the delivery buttons
-DEL_BTN_PADDING_RIGHT = 125
-# Space between grid squares, px
-GRID_PADDING = 7
+DEL_BTN_TOP = 0.354
+# Delivery button spacing from right to left (relative to width)
+DEL_BTN_SPACING = 0.338
+# Padding right of the delivery buttons (relative to width)
+DEL_BTN_PADDING_RIGHT = 0.116
+# Space between grid squares (relative to min(width, height))
+GRID_PADDING = 0.003
+# Right generator button position
+R_GEN_TOP = 0.848
+R_GEN_LEFT = 0.734
+# Left generator button position
+L_GEN_TOP = 0.846
+L_GEN_LEFT = 0.264
 
 # Minimum blank spaces on the grid for bot to run
 MIN_SPACES_ON_BOARD = 2
 
-# Check if config file exists file exists and load the parameters
+# Check if config file exists and load the parameters
 config_path = os.path.join(os.getcwd(), "bot_config.json")
 
 if os.path.exists(config_path):
@@ -82,7 +89,6 @@ if os.path.exists(config_path):
     RUN_ON_MOBILE = loaded_data["RUN_ON_MOBILE"]
     IGNORED_MATCH_POSITIONS = loaded_data["IGNORED_MATCH_POSITIONS"]
     ADDITIONAL_IGNORED_POSITIONS = loaded_data["ADDITIONAL_IGNORED_POSITIONS"]
-    GENERATOR_POSITIONS = loaded_data["GENERATOR_POSITIONS"]
     ROI_TOP = loaded_data["ROI_TOP"]
     ROI_BOTTOM = loaded_data["ROI_BOTTOM"]
     ROI_PADDING = loaded_data["ROI_PADDING"]
@@ -104,5 +110,9 @@ if os.path.exists(config_path):
     MIN_SPACES_ON_BOARD = loaded_data["MIN_SPACES_ON_BOARD"]
     DEL_BTN_SPACING = loaded_data["DEL_BTN_SPACING"]
     DEL_BTN_PADDING_RIGHT = loaded_data["DEL_BTN_PADDING_RIGHT"]
+    R_GEN_TOP = loaded_data["R_GEN_TOP"]
+    R_GEN_LEFT = loaded_data["R_GEN_LEFT"]
+    L_GEN_TOP = loaded_data["L_GEN_TOP"]
+    L_GEN_LEFT = loaded_data["L_GEN_LEFT"]
 else:
     print(f"The file {config_path} does not exist. Using default values.")

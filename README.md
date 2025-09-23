@@ -42,11 +42,17 @@ On Terminal / CMD:
 And check if you have on device listed here.
 
 Now you should install the necessary pip packages:
-`pip install opencv-python numpy pytesseract pure-python-adb`
+`pip install opencv-python numpy pytesseract pure-python-adb pillow`
+
+If ImageTk is not Found Run:
+
+Fedora: `sudo dnf install python3-tkinter python3-pillow-tk`
+Ubuntu: `sudo apt install python3-tk python3-pil.imagetk`
+
 
 ## Setup on Termux
 
-First make sure you have installed the [Termux](https://github.com/termux/termux-app/releases), [Termux:API](https://github.com/termux/termux-api/releases) and [Termux:GUI](https://github.com/termux/termux-gui/releases) APKs from git.
+First make sure you have installed the [Termux:API](https://github.com/termux/termux-api/releases), [Termux](https://github.com/termux/termux-app/releases) and [Termux:GUI](https://github.com/termux/termux-gui/releases) APKs from git.
 
 If you want a faster mirror then use the `termux-change-repo` before everything else and select a mirror apropriate to your region - using space to select, enter to confirm.
 
@@ -55,10 +61,13 @@ To setup on Termux, copy and paste the code below:
 ```bash
 yes | pkg update -y
 yes | pkg upgrade -y
-pkg install -y git opencv-python tesseract python android-tools termux-api
+pkg install -y x11-repo
+pkg install -y git opencv-python matplotlib tesseract python android-tools termux-api
 pip install numpy pytesseract pure-python-adb termuxgui
+termux-setup-storage
+cd ~/storage/downloads
 git clone https://github.com/cheadrian/mergebot
-cd ~/mergebot
+cd mergebot
 ```
 
 *Note:* Due to a change in Termux packages the OpenCV-Python has some broken simbols. Check the updates and the problem [description here](https://github.com/cheadrian/mergebot/issues/7).
@@ -94,14 +103,13 @@ adb devices
 
 ## Configuration
 
-You should adjust configuration based on your device and game status. To do this, on PC you can adjust parameters inside `configuration.py`.
+You should adjust configuration based on your device and game status. To do this, you can adjust parameters inside `configuration.py`.
 
-On Termux you can run the configuration script.
+On Termux or PC you can run the configuration script.
 
 Take two screenshots in the game, one with the items to merge, and one on the energy task menu and run the configuration script:
 
 ```bash
-cd ~/mergebot
 python bot_gui.py
 ```
 
@@ -129,7 +137,7 @@ After you configured the bot parameters, you can simply:
 If you are on Termux, first:
 
 ```bash
-cd ~/mergebot
+cd ~/storage/downloads/mergebot
 ```
 
 ```bash

@@ -7,7 +7,7 @@ import threading
 import os
 
 
-# Import Termux:GUI to diplay overlay if script is running on Android
+# Import Termux:GUI to display overlay if script is running on Android
 if c.RUN_ON_MOBILE:
     import termuxgui as tg
     
@@ -69,7 +69,7 @@ def do_button_flags(img, device):
     global pause_flag, farm_flag, exit_flag 
     while pause_flag:
         time.sleep(0.5)
-        # If bot is paused and manual farm energy is requsted, start to farm
+        # If bot is paused and manual farm energy is requested, start to farm
         if farm_flag:
             print("Starting to farm energy.")
             # Touch the game window to focus back on it
@@ -113,7 +113,7 @@ if c.CHECK_ENERGY_LEVEL:
     print("Make sure you have Tesseract installed on the system and added to PATH")
     
 
-#  Applies image processing techniques, including Gaussian blur and Adaptive Thresholding, Sobel edge detection or simple thresholding.
+# Applies Sobel edge detection to highlight edges in the image.
 def apply_processing(img, sob_thresh=30):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -121,28 +121,29 @@ def apply_processing(img, sob_thresh=30):
     sobel_edges = sobel_edge_detector(gray, sob_thresh)
     return sobel_edges
 
-    return adaptive_threshold
-
 
 # Creates a grid of rectangular contours within the specified region of interest (ROI) with padding.
 def generate_grid_contours(img, roi, padding=5):
     height, width, _ = img.shape
     roi_min, roi_max, width_padding = roi
-    max_rows, max_col = 9, 7
+    max_rows, max_col = 5, 7
     square_size = (roi_max - roi_min) // max_rows
     contours = []
+
+    # Convert relative padding to absolute pixels
+    padding_pixels = int(padding * min(width, height))
 
     # Draw rectangles mesh and find contours with padding
     for row in range(max_rows):
         for col in range(max_col):
-            x = (col * square_size) + int(width_padding) + padding
-            y = roi_min + row * square_size + padding
+            x = (col * square_size) + int(width_padding) + padding_pixels
+            y = roi_min + row * square_size + padding_pixels
             contour = np.array(
                 [
                     (x, y),
-                    (x + square_size - 2 * padding, y),
-                    (x + square_size - 2 * padding, y + square_size - 2 * padding),
-                    (x, y + square_size - 2 * padding),
+                    (x + square_size - 2 * padding_pixels, y),
+                    (x + square_size - 2 * padding_pixels, y + square_size - 2 * padding_pixels),
+                    (x, y + square_size - 2 * padding_pixels),
                 ]
             )
             contours.append(contour)
@@ -189,7 +190,7 @@ def compare_imgs(img1, img2):
     # Find pixels that differ between the two images
     diff_img = np.bitwise_xor(img1, img2)
 
-    # Count the number of white pixels
+    # Count the number of differing pixels
     diff_pixels_cnt = np.count_nonzero(diff_img)
 
     normalized_similarity = 1 - (diff_pixels_cnt / (height * width))
@@ -203,7 +204,11 @@ def group_similar_imgs(imgs, compare_threshold=0.8):
     visited = set()
 
     for i, img1 in enumerate(imgs):
-        if img1[1] or i < c.IGNORED_MATCH_POSITIONS or (i + 1) in c.ADDITIONAL_IGNORED_POSITIONS:
+        # Check if image is blank, or if it's in the ignored positions
+        is_ignored_sequential = c.IGNORED_MATCH_POSITIONS > 0 and i < c.IGNORED_MATCH_POSITIONS
+        is_ignored_additional = (i + 1) in c.ADDITIONAL_IGNORED_POSITIONS
+        
+        if img1[1] or is_ignored_sequential or is_ignored_additional:
             visited.add(i)
             continue
 
@@ -212,7 +217,11 @@ def group_similar_imgs(imgs, compare_threshold=0.8):
             found_match = False  # Flag to check if any similar blob is found
 
             for j, img2 in enumerate(imgs):
-                if img2[1] or j < c.IGNORED_MATCH_POSITIONS or (i + 1) in c.ADDITIONAL_IGNORED_POSITIONS:
+                # Check if image is blank, or if it's in the ignored positions
+                is_ignored_sequential_j = c.IGNORED_MATCH_POSITIONS > 0 and j < c.IGNORED_MATCH_POSITIONS
+                is_ignored_additional_j = (j + 1) in c.ADDITIONAL_IGNORED_POSITIONS
+                
+                if img2[1] or is_ignored_sequential_j or is_ignored_additional_j:
                     visited.add(j)
                     continue
                 if i != j and j not in visited:
@@ -250,6 +259,8 @@ def annotate_image(img, contours, groups, roi):
     close_btn_top, close_btn_left = int(c.EX_TOP * height), int(c.EX_LEFT * width)
     delivery_top = int(c.DEL_TOP * height)
     delivery_btn_top = int(c.DEL_BTN_TOP * height)
+    r_gen_btn_top, r_gen_btn_left = (int(c.R_GEN_TOP * height), int(c.R_GEN_LEFT * width))
+    l_gen_btn_top, l_gen_btn_left = (int(c.L_GEN_TOP * height), int(c.L_GEN_LEFT * width))
 
     # Unpack region of interest
     roi_min, roi_max, width_padding = roi
@@ -265,28 +276,28 @@ def annotate_image(img, contours, groups, roi):
 
     # Mark energy position, X and "GO" button
     cv2.rectangle(img, (eng_left, eng_top), (eng_right, eng_bot), (255, 0, 255), 6)
-    img = cv2.circle(img, (go_btn_left, go_btn_top), 20, (125, 25, 255), -1)
-    img = cv2.circle(img, (close_btn_left, close_btn_top), 20, (125, 25, 255), -1)
+    img = cv2.circle(img, (go_btn_left, go_btn_top), 20, (0, 255, 0), -1)
+    img = cv2.circle(img, (close_btn_left, close_btn_top), 20, (0, 0, 255), -1)
+    img = cv2.circle(img, (r_gen_btn_left, r_gen_btn_top), 25, (0, 255, 255), -1)
+    img = cv2.circle(img, (l_gen_btn_left, l_gen_btn_top), 25, (255, 255, 0), -1)
 
-    # Draw line and points for automatic delivery
+    # Draw line and points for automatic delivery - Convert to relative coordinates
     img = cv2.line(
         img, (width // 2, delivery_top), (width, delivery_top), (255, 255, 0), 10
     )
-    img = cv2.circle(img, (width - c.DEL_BTN_PADDING_RIGHT - (c.DEL_BTN_SPACING * 2), delivery_btn_top), 20, (255, 50, 255), -1)
-    img = cv2.circle(img, (width - c.DEL_BTN_PADDING_RIGHT - c.DEL_BTN_SPACING, delivery_btn_top), 20, (255, 50, 255), -1)
-    img = cv2.circle(img, (width - c.DEL_BTN_PADDING_RIGHT, delivery_btn_top), 20, (255, 50, 255), -1)
+    img = cv2.circle(img, (width - int(c.DEL_BTN_PADDING_RIGHT * width) - int(c.DEL_BTN_SPACING * width * 2), delivery_btn_top), 20, (255, 50, 255), -1)
+    img = cv2.circle(img, (width - int(c.DEL_BTN_PADDING_RIGHT * width) - int(c.DEL_BTN_SPACING * width), delivery_btn_top), 20, (255, 50, 255), -1)
+    img = cv2.circle(img, (width - int(c.DEL_BTN_PADDING_RIGHT * width), delivery_btn_top), 20, (255, 50, 255), -1)
 
-    # Draw ignored contours
-    for ig in range(c.IGNORED_MATCH_POSITIONS):
-        cv2.drawContours(img, [contours[ig]], 0, (0, 0, 255), 4)
+    # Draw ignored contours (only if IGNORED_MATCH_POSITIONS > 0)
+    if c.IGNORED_MATCH_POSITIONS > 0:
+        for ig in range(c.IGNORED_MATCH_POSITIONS):
+            cv2.drawContours(img, [contours[ig]], 0, (0, 0, 255), 4)
         
     # Draw addititional ignored contours
     for ig in c.ADDITIONAL_IGNORED_POSITIONS:
-        cv2.drawContours(img, [contours[ig - 1]], 0, (0, 0, 255), 4)
-
-    if c.CHECK_ENERGY_LEVEL:
-        for pos in c.GENERATOR_POSITIONS:
-            cv2.drawContours(img, [contours[pos - 1]], 0, (0, 160, 255), 6)
+        if ig > 0 and ig <= len(contours):  # Ensure valid position
+            cv2.drawContours(img, [contours[ig - 1]], 0, (0, 0, 255), 4)
 
     # Mark contours and groups on image
     for group_id, contour_indices in enumerate(groups):
@@ -354,11 +365,11 @@ def try_to_delivery(device, img_shape):
     delivery_btn_top = int(c.DEL_BTN_TOP * height)
 
     # Swipe through the delivery list and try to press the "Delivery" button
-    for i in range(6):
+    for i in range(3):
+        device.input_tap(width - int(c.DEL_BTN_PADDING_RIGHT * width) - int(c.DEL_BTN_SPACING * width * 2), delivery_btn_top)
+        device.input_tap(width - int(c.DEL_BTN_PADDING_RIGHT * width) - int(c.DEL_BTN_SPACING * width), delivery_btn_top)
+        device.input_tap(width - int(c.DEL_BTN_PADDING_RIGHT * width), delivery_btn_top)
         device.input_swipe(width - 100, delivery_top, width // 2, delivery_top, 40)
-        device.input_tap(width - c.DEL_BTN_PADDING_RIGHT - (c.DEL_BTN_SPACING * 2), delivery_btn_top)
-        device.input_tap(width - c.DEL_BTN_PADDING_RIGHT - c.DEL_BTN_SPACING, delivery_btn_top)
-        device.input_tap(width - c.DEL_BTN_PADDING_RIGHT, delivery_btn_top)
 
     # Go back
     for i in range(6):
@@ -366,17 +377,21 @@ def try_to_delivery(device, img_shape):
 
 
 # Generates objects by clicking on specified generator positions.
-def generate_objects(device, contours, img):
+def generate_objects(device, width, height, img, count_blanks):
     energy_left = get_energy_level(img)
-    for pos in c.GENERATOR_POSITIONS:
-        x, y, _, _ = cv2.boundingRect(contours[pos - 1])
-        if energy_left <= c.MIN_ENERGY_LEVEL:
-            print("No energy left")
-            return False
-        device.input_tap(x, y)
-        device.input_tap(x, y)
-        energy_left = energy_left - 1
-
+    if energy_left <= c.MIN_ENERGY_LEVEL:
+        print("No energy left")
+        return False
+    for i in range(energy_left, c.MIN_ENERGY_LEVEL, -1):
+        print(f"Blank Fields: {count_blanks}, Energy left: {i}")
+        if count_blanks < 2:
+            return True
+        if i % 2 == 0:
+            device.input_tap(width * c.R_GEN_LEFT, height * c.R_GEN_TOP)
+        else:
+            device.input_tap(width * c.L_GEN_LEFT, height * c.L_GEN_TOP)
+        count_blanks -= 1
+        time.sleep(0.1)
     return True
 
 
@@ -412,21 +427,89 @@ def get_energy_level(img):
         int(height * c.ENG_BOTTOM),
     )
     cropped = img[y:y1, x:x1]
+    if c.IMAGE_DEBUG:
+        cv2.imwrite("cropped.png", cropped)
 
-    # Preprocess the cropped image for better text recognition
+    min_pixel = 120
+    max_pixel = 300
+    gap = 2
+    padding = 3
+
     gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
 
-    # # Apply thresholding to enhance text visibility
-    _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    if c.IMAGE_DEBUG:
+        _, old_thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        cv2.imwrite("old_thresh.png", old_thresh)
+        cv2.floodFill(old_thresh, None, (5, 5), 0, flags=8)
+        cv2.imwrite("old_finish.png", old_thresh)
 
-    cv2.floodFill(thresh, None, (5, 5), 0, flags=8)
+    # Preprocessing & dilate
+    _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    if c.IMAGE_DEBUG:
+        cv2.imwrite("new_thresh.png", thresh)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+    dilate = cv2.dilate(thresh, kernel, iterations=1)
+
+    # Invert for component analysis
+    binary_inv = cv2.bitwise_not(dilate)
+
+    # Find connected components
+    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(binary_inv)
+
+    regions = []
+    for i in range(1, num_labels):
+        area = stats[i, cv2.CC_STAT_AREA]
+        if min_pixel <= area <= max_pixel:
+            x = stats[i, cv2.CC_STAT_LEFT]
+            y = stats[i, cv2.CC_STAT_TOP]
+            w = stats[i, cv2.CC_STAT_WIDTH]
+            h = stats[i, cv2.CC_STAT_HEIGHT]
+
+            # Add padding
+            x_pad = max(0, x - padding)
+            y_pad = max(0, y - padding)
+            x2_pad = min(dilate.shape[1], x + w + padding)
+            y2_pad = min(dilate.shape[0], y + h + padding)
+
+            region = dilate[y_pad:y2_pad, x_pad:x2_pad]
+            mask = (labels[y_pad:y2_pad, x_pad:x2_pad] == i).astype(np.uint8)
+
+            # Dilate mask
+            kernel_pad = np.ones((padding * 2 + 1, padding * 2 + 1), np.uint8)
+            mask_dilated = cv2.dilate(mask, kernel_pad)
+
+            # Store region + mask
+            regions.append((x, region, mask_dilated))
+
+    # Sort by X coordinate (from left to right)
+    regions.sort(key=lambda r: r[0])
+
+    # Calculate target dimensions
+    heights = [r[1].shape[0] for r in regions]
+    widths = [r[1].shape[1] for r in regions]
+    total_width = sum(widths) + gap * (len(regions) - 1)
+    max_height = max(heights)
+
+    # Create new white image (grayscale)
+    output = np.full((max_height, total_width), 255, dtype=np.uint8)
+
+    # Insert regions
+    current_x = 0
+    for _, region, mask in regions:
+        h, w = region.shape
+        roi = output[0:h, current_x:current_x + w]
+        roi[mask == 1] = region[mask == 1]
+        current_x += w + gap
+
+    if c.IMAGE_DEBUG:
+        cv2.imwrite("new_finish.png", output)
 
     # Use pytesseract to extract numeric text from the preprocessed image
     custom_config = r"--oem 3 --psm 7 outputbase digits"  # Tesseract OCR configuration for numeric digits
-    text = pytesseract.image_to_string(thresh, config=custom_config)
+    text = pytesseract.image_to_string(output, config=custom_config)
 
     if DISPLAY_EXTRACTED_IMGS:
-        cv2.imshow("Extracted energy", thresh)
+        cv2.imshow("Extracted energy", output)
         print("Energy: ", text.strip())
         cv2.waitKey(5)
 
@@ -463,7 +546,7 @@ def farm_energy(img, device):
 
 
 # Combines a list of binary images into a grid with the specified number of columns and rows, just for debugging display.
-def combine_binary_images(extracted_imgs, columns=7, rows=9):
+def combine_binary_images(extracted_imgs, columns=7, rows=5):
     # Ensure that the number of images is consistent with the specified grid size
     if len(extracted_imgs) != (columns * rows):
         raise ValueError(
@@ -499,7 +582,6 @@ def check_if_space_left(count_blanks, grouped_items):
     if count_blanks + len(grouped_items) < c.MIN_SPACES_ON_BOARD:
         print("There's no space left on the grid and no swipe possible. Bot will exit.")
         exit()
-        
 
 # Check if the bot should terminate and exit
 def check_if_should_exit(device):
@@ -611,18 +693,14 @@ def main():
         grouped_items = group_similar_imgs(extracted_imgs, c.SIMILARITY_THRESHOLD)
 
         check_if_should_exit(device)
-            
+
         swipe_elements(device, grid_contours, grouped_items, roi)
         
         check_if_space_left(count_blanks, grouped_items)
 
         # Check the energy left and matches
         if c.CHECK_ENERGY_LEVEL and len(grouped_items) <= c.MAX_GENERATOR_GROUP_NUMBERS:
-            if (
-                generate_objects(device, grid_contours, img) == False
-                and len(grouped_items) == 0
-            ):
-                print("No group found.")
+            if generate_objects(device, width, height, img, count_blanks+len(grouped_items)) == False:
                 if farm_the_energy:
                     print("Starting to farm energy.")
                     farm_energy(img, device)
